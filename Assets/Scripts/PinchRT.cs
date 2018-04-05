@@ -6,6 +6,39 @@ using UnityEngine;
 public class PinchRT : MonoBehaviour {
 
     [SerializeField]
+    private Material default_material;
+    public Material DefaultMaterial {
+        get {
+            return default_material;
+        }
+        set {
+            default_material = value;
+        }
+    }
+
+    [SerializeField]
+    private Material selected_material;
+    public Material SelectedMaterial {
+        get {
+            return selected_material;
+        }
+        set {
+            selected_material = value;
+        }
+    }
+
+    [SerializeField]
+    private Material pinched_material;
+    public Material PinchedMaterial {
+        get {
+            return pinched_material;
+        }
+        set {
+            pinched_material = value;
+        }
+    }
+
+    [SerializeField]
     private PinchDetector pinch_detector_L;
     public PinchDetector PinchDetectorL {
         get {
@@ -60,6 +93,8 @@ public class PinchRT : MonoBehaviour {
         transform.parent = anchor;
     }
 
+    private bool proximity_lock = false;
+
     private void Update() {
         bool did_update = false;
         if (pinch_detector_L != null) {
@@ -69,22 +104,41 @@ public class PinchRT : MonoBehaviour {
             did_update |= pinch_detector_R.DidChangeFromLastFrame;
         }
 
-        if (did_update) {
+        if (proximity_detector_L != null) {
+            proximity_lock = (proximity_detector_L.DidChangeFromLastFrame || proximity_lock) && !did_update; 
+        }
+        if (proximity_detector_R != null) {
+            proximity_lock |= (proximity_detector_R.DidChangeFromLastFrame || proximity_lock) && !did_update;
+        }
+
+        if (did_update || proximity_lock) {
             transform.SetParent(null, true);
         }
 
-        // Debug.Log(this);
-        // Debug.Log(proximity_detector_R.CurrentObject);
+        MeshRenderer renderer = this.transform.GetChild(0).GetComponent<MeshRenderer>();
 
-        if (pinch_detector_L != null && pinch_detector_L.IsPinching
-            && proximity_detector_L != null && proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent == this) {
-            TransformAnchor(pinch_detector_L);
-        } else if (pinch_detector_R != null && pinch_detector_R.IsPinching
-            && proximity_detector_R != null && proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent == this) {
-            TransformAnchor(pinch_detector_R);
+        if ((proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent.name.Equals(this.name)) ||
+            (proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent.name.Equals(this.name))) {
+            renderer.material = selected_material;
+        }
+        else {
+            renderer.material = default_material;
         }
 
-        if (did_update) {
+        if (pinch_detector_L != null && pinch_detector_L.IsPinching
+            && proximity_detector_L != null && proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent.name.Equals(this.name)) {
+
+            TransformAnchor(pinch_detector_L);
+            renderer.material = pinched_material;
+
+        } else if (pinch_detector_R != null && pinch_detector_R.IsPinching
+            && proximity_detector_R != null && proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent.name.Equals(this.name)) {
+
+            TransformAnchor(pinch_detector_R);
+            renderer.material = pinched_material;
+        }
+
+        if (did_update || proximity_lock) {
             transform.SetParent(anchor, true);
         }
 

@@ -27,6 +27,9 @@ public class ProximityDetector : Detector {
     public GameObject current_object = null;
     public GameObject CurrentObject { get { return current_object; } }
 
+    private bool did_change = false;
+    public bool DidChangeFromLastFrame { get { return did_change; } }
+
     protected virtual void OnValidate() {
         if (off_distance < on_distance) {
             off_distance = on_distance;
@@ -56,12 +59,15 @@ public class ProximityDetector : Detector {
             on_squared = on_distance * on_distance;
             off_squared = off_distance * off_distance;
 
-            Debug.Log("onsquared : " + on_squared + "; offsquared : " + off_squared);
+//            Debug.Log("onsquared : " + on_squared + "; offsquared : " + off_squared);
 
             if (current_object != null) {
                 if (DistanceSquared(current_object) > off_squared) {
                     current_object = null;
                     proximity_state = false;
+                    did_change = true;
+                } else {
+                    did_change = false;
                 }
             } else {
                 for (int obj = 0; obj < TargetObjects.Length; obj++) {
@@ -70,13 +76,17 @@ public class ProximityDetector : Detector {
                         current_object = target;
                         proximity_state = true;
                         OnProximity.Invoke(current_object);
+                        did_change = true;
                         break;
                         // TODO : change first match to closest obj
                     }
                 }
+                if (current_object == null) {
+                    did_change = false;
+                }
             }
 
-            Debug.Log(current_object);
+//            Debug.Log(current_object);
             if(proximity_state) {
                 Activate();
             } else {
@@ -96,7 +106,7 @@ public class ProximityDetector : Detector {
         } else {
             closest_pt = target.transform.position;
         }
-        Debug.Log(target + " ; distance : " + (closest_pt - transform.position).sqrMagnitude);
+//        Debug.Log(target + " ; distance : " + (closest_pt - transform.position).sqrMagnitude);
         return (closest_pt - transform.position).sqrMagnitude;
 
     }
