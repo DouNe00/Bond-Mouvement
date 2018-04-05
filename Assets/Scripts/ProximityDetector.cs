@@ -61,33 +61,34 @@ public class ProximityDetector : Detector {
 
 //            Debug.Log("onsquared : " + on_squared + "; offsquared : " + off_squared);
 
-            if (current_object != null) {
-                if (DistanceSquared(current_object) > off_squared) {
-                    current_object = null;
-                    proximity_state = false;
-                    did_change = true;
-                } else {
-                    did_change = false;
+            did_change = false;
+            GameObject closest = null;
+            float min_distance = current_object == null ? on_squared : Mathf.Min(DistanceSquared(current_object), on_squared);
+            for (int obj = 0; obj < TargetObjects.Length; obj++) {
+                GameObject target = TargetObjects[obj];
+                float distance = DistanceSquared(target);
+                if (distance < min_distance) {
+                    closest = target;
+                    min_distance = distance;
+                    proximity_state = true;
                 }
-            } else {
-                for (int obj = 0; obj < TargetObjects.Length; obj++) {
-                    GameObject target = TargetObjects[obj];
-                    if (DistanceSquared(target) < on_squared) {
-                        current_object = target;
-                        proximity_state = true;
-                        OnProximity.Invoke(current_object);
-                        did_change = true;
-                        break;
-                        // TODO : change first match to closest obj
-                    }
+            }
+            if (closest == null && current_object != null) {
+                if (DistanceSquared(current_object) < off_squared) {
+                    closest = current_object;
                 }
-                if (current_object == null) {
-                    did_change = false;
-                }
+            }
+            if (current_object != closest) did_change = true;
+            current_object = closest;
+            if (current_object == null) proximity_state = false;
+
+            if (proximity_state) {
+                OnProximity.Invoke(current_object);
             }
 
 //            Debug.Log(current_object);
             if(proximity_state) {
+                OnProximity.Invoke(current_object);
                 Activate();
             } else {
                 Deactivate();
