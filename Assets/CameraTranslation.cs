@@ -10,6 +10,8 @@ public class CameraTranslation : MonoBehaviour {
     public float minX = 0f;
     public float maxY = 0f;
     public float minY = 0f;
+    public float maxZ = 0f;
+    public float minZ = 0f;
 	
 	// Update is called once per frame
 	void Update () {
@@ -25,5 +27,12 @@ public class CameraTranslation : MonoBehaviour {
         if (Input.GetKey("d")) {
             transform.position = new Vector3(Mathf.Min(transform.position.x + Time.deltaTime * speed, maxX), transform.position.y, transform.position.z);
         }
+        if (Input.GetKey("a")) {
+            transform.position = new Vector3(transform.position.x, transform.position.y, Mathf.Max(transform.position.z - Time.deltaTime * speed, minZ));
+        }
+        if (Input.GetKey("e")) {
+            transform.position = new Vector3(transform.position.x, transform.position.y, Mathf.Min(transform.position.z + Time.deltaTime * speed, maxZ));
+        }
+
     }
 }
