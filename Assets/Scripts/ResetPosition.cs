@@ -23,11 +23,12 @@ public class ResetPosition : MonoBehaviour {
         }
 	}
 
-    private void OnTriggerEnter(Collider other) {
+    public void OnTriggerEnter(Collider other) {
         Debug.Log("cc");
         target.transform.localPosition = initial_pos;
         target.transform.localRotation = initial_rot;
         target.transform.parent.transform.position = anchor_pos;
         target.transform.parent.transform.rotation = anchor_rot;
+        target.GetComponent<Snap>().IsSnapped = false;
     }
 }

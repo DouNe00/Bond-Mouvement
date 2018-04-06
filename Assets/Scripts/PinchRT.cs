@@ -94,8 +94,12 @@ public class PinchRT : MonoBehaviour {
     }
 
     private bool proximity_lock = false;
+    private bool snap_lock = false;
 
     private void Update() {
+        snap_lock = this.GetComponent<Snap>().IsSnapped;
+        if (snap_lock) return;
+
         bool did_update = false;
         if (pinch_detector_L != null) {
             did_update |= pinch_detector_L.DidChangeFromLastFrame;
@@ -117,26 +121,32 @@ public class PinchRT : MonoBehaviour {
 
         MeshRenderer renderer = this.transform.GetChild(0).GetComponent<MeshRenderer>();
 
-        if ((proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent.name.Equals(this.name)) ||
-            (proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent.name.Equals(this.name))) {
-            renderer.material = selected_material;
-        }
-        else {
-            renderer.material = default_material;
+        if (renderer != null) {
+            if ((proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent.name.Equals(this.name)) ||
+                (proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent.name.Equals(this.name))) {
+                renderer.material = selected_material;
+            }
+            else {
+                renderer.material = default_material;
+            }
         }
 
         if (pinch_detector_L != null && pinch_detector_L.IsPinching
             && proximity_detector_L != null && proximity_detector_L.CurrentObject != null && proximity_detector_L.CurrentObject.transform.parent.name.Equals(this.name)) {
 
             TransformAnchor(pinch_detector_L);
-            renderer.material = pinched_material;
+            if (renderer != null) renderer.material = pinched_material;
 
         } else if (pinch_detector_R != null && pinch_detector_R.IsPinching
             && proximity_detector_R != null && proximity_detector_R.CurrentObject != null && proximity_detector_R.CurrentObject.transform.parent.name.Equals(this.name)) {
 
             TransformAnchor(pinch_detector_R);
-            renderer.material = pinched_material;
+            if (renderer != null) renderer.material = pinched_material;
         }
+
+        Snap snap_manager = this.GetComponent<Snap>();
+        if ((pinch_detector_L.DidEndPinch || pinch_detector_R.DidEndPinch) && snap_manager.IsSnapping) snap_manager.OnMouseUp();
+        snap_lock = snap_manager.IsSnapped;
 
         if (did_update || proximity_lock) {
             transform.SetParent(anchor, true);
